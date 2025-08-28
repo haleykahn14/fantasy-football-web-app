@@ -78,6 +78,9 @@ const LeagueData = () => {
     // Function to get highest and lowest scoring teams
     const getTeamStats = () => {
         const teamPoints = pointsPerTeam();
+        if (teamPoints.length === 0) {
+            return { highestTeam: { team: 'N/A', totalPoints: 0 }, lowestTeam: { team: 'N/A', totalPoints: 0 } };
+        }
         const highestTeam = teamPoints.reduce((max, team) => 
             team.totalPoints > max.totalPoints ? team : max
         );
@@ -86,6 +89,23 @@ const LeagueData = () => {
         );
 
         return { highestTeam, lowestTeam };
+    };
+
+    // Function to get highest and lowest scoring players for a specific team
+    const getTeamPlayerStats = (teamName) => {
+        const teamPlayers = data.filter(player => player.TeamName === teamName);
+        if (teamPlayers.length === 0) {
+            return { highest: null, lowest: null };
+        }
+
+        const highest = teamPlayers.reduce((max, player) =>
+            player.PlayerScoreActual > max.PlayerScoreActual ? player : max
+        );
+        const lowest = teamPlayers.reduce((min, player) =>
+            player.PlayerScoreActual < min.PlayerScoreActual ? player : min
+        );
+
+        return { highest, lowest };
     };
 
     const overallPlayers = getHighestLowestPlayers();
@@ -122,14 +142,16 @@ const LeagueData = () => {
                 </Tabs>
             </Box>
             <Box style={{ border: '1px solid #ccc', borderTop: 'none', borderBottomLeftRadius: '4px', borderBottomRightRadius: '4px', padding: '16px'}}>
-                {teams.map((team, index) => (
+                {teams.map((team, index) => {
+                    const teamPlayerStats = getTeamPlayerStats(team);
+                    return (
                     <div role="tabpanel" hidden={activeTab !== index} key={index}>
                         {activeTab === index && (
                             <div>
                                 <h2>{team}</h2>
 
-                                <p><strong>Highest Scoring Player Overall:</strong> {overallPlayers.highest?.PlayerName} ({overallPlayers.highest?.PlayerScoreActual})</p>
-                                <p><strong>Lowest Scoring Player Overall:</strong> {overallPlayers.lowest?.PlayerName} ({overallPlayers.lowest?.PlayerScoreActual})</p>
+                                <p><strong>Highest Scoring Player:</strong> {teamPlayerStats.highest?.PlayerName} ({teamPlayerStats.highest?.PlayerScoreActual})</p>
+                                <p><strong>Lowest Scoring Player:</strong> {teamPlayerStats.lowest?.PlayerName} ({teamPlayerStats.lowest?.PlayerScoreActual})</p>
 
                                 <div style={{width: 'auto' }}>
                                     <DataGrid
@@ -151,7 +173,7 @@ const LeagueData = () => {
                             </div>
                         )}
                     </div>
-                ))}
+                )})}
                 <div>
                     <h2>Points Per Position</h2>
                     <div style={{width: 'auto' }}>
